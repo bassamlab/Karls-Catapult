@@ -57,7 +57,11 @@
   </section>
 
   <section class="model" id="model">
-    <h2>The model</h2>
+    <h2>The math you need</h2>
+    <p class="muted">The slides ended with the open-loop observer. This section takes it from there: how the catapult becomes a discrete-time model, why the open-loop observer is not enough, and how the Kalman filter fixes it. Each part says which task needs it.</p>
+
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">1</span> The physics of a throw <small>· Task 1</small></h3>
     <p>Neglecting air drag, a stone thrown from the origin with speed <i>v</i><sub>0</sub> at angle <i>θ</i><sub>0</sub> follows</p>
     <math display="block">
       <mtable columnalign="right left" rowspacing="0.6em">
@@ -65,32 +69,137 @@
         <mtr><mtd><msub><mi>s</mi><mi>y</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo></mtd><mtd><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>⁢</mo><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>⋅</mo><mi>t</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>g</mi><msup><mi>t</mi><mn>2</mn></msup></mtd></mtr>
       </mtable>
     </math>
-    <p>with gravity <i>g</i> = 9.81 m/s². The velocity is the time derivative: <i>v</i><sub>x</sub> = <i>v</i><sub>0</sub> cos <i>θ</i><sub>0</sub> stays constant, <i>v</i><sub>y</sub> = <i>v</i><sub>0</sub> sin <i>θ</i><sub>0</sub> − <i>g t</i> decreases.</p>
-
-    <p>For the filter we use the discrete-time state-space form from the lecture, with state <b>x</b> = [<i>s</i><sub>x</sub>, <i>s</i><sub>y</sub>, <i>v</i><sub>x</sub>, <i>v</i><sub>y</sub>]<sup>T</sup> and time step Δ<i>t</i>:</p>
+    <p>with gravity <i>g</i> = 9.81 m/s². The velocity is the time derivative of the position (needed again in Task 4):</p>
     <math display="block">
-      <mtable columnalign="right left" rowspacing="0.6em">
-        <mtr><mtd><msub><mi mathvariant="bold">x</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mtd><mtd><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi><mo>+</mo><msub><mi mathvariant="bold">w</mi><mi>k</mi></msub><mo>,</mo><mspace width="1em"/><msub><mi mathvariant="bold">w</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">Q</mi><mo>)</mo></mtd></mtr>
-        <mtr><mtd><msub><mi mathvariant="bold">z</mi><mi>k</mi></msub></mtd><mtd><mo>=</mo><mi mathvariant="bold">H</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><msub><mi mathvariant="bold">v</mi><mi>k</mi></msub><mo>,</mo><mspace width="1em"/><msub><mi mathvariant="bold">v</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">R</mi><mo>)</mo></mtd></mtr>
-      </mtable>
+      <msub><mi>v</mi><mi>x</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>⁢</mo><mi>cos</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub>
+      <mo>,</mo><mspace width="2em"/>
+      <msub><mi>v</mi><mi>y</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>⁢</mo><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>−</mo><mi>g</mi><mi>t</mi>
     </math>
-    <p>A constant-velocity motion model, gravity as a known (systematic) disturbance <b>u</b>, and an observation that measures only the position:</p>
+    <p><b>Landing time and distance.</b> The stone is back on the ground when <i>s</i><sub>y</sub>(<i>t</i>) = 0. Factor out <i>t</i>:</p>
     <math display="block">
+      <mi>t</mi><mrow><mo>(</mo><msub><mi>v</mi><mn>0</mn></msub><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>g</mi><mi>t</mi><mo>)</mo></mrow><mo>=</mo><mn>0</mn>
+      <mspace width="1em"/><mo>⇒</mo><mspace width="1em"/>
+      <msub><mi>t</mi><mi>f</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><msub><mi>v</mi><mn>0</mn></msub><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub></mrow><mi>g</mi></mfrac>
+      <mo>,</mo><mspace width="2em"/>
+      <mi>d</mi><mo>(</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>)</mo><mo>=</mo><msub><mi>s</mi><mi>x</mi></msub><mo>(</mo><msub><mi>t</mi><mi>f</mi></msub><mo>)</mo><mo>=</mo><mfrac><mrow><msubsup><mi>v</mi><mn>0</mn><mn>2</mn></msubsup><mo>⋅</mo><mn>2</mn><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mi>cos</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub></mrow><mi>g</mi></mfrac><mo>=</mo><mfrac><mrow><msubsup><mi>v</mi><mn>0</mn><mn>2</mn></msubsup><mi>sin</mi><mo>⁡</mo><mo>(</mo><mn>2</mn><msub><mi>θ</mi><mn>0</mn></msub><mo>)</mo></mrow><mi>g</mi></mfrac>
+    </math>
+    <p>The distance is largest where sin(2<i>θ</i><sub>0</sub>) is largest. Which angle is that?</p>
+
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">2</span> From continuous to discrete time <small>· Tasks 3–5</small></h3>
+    <p>A filter runs on a computer and receives measurements at discrete times <i>t</i><sub>k</sub> = <i>k</i> Δ<i>t</i>. So we first collect everything we need to know about the stone in a <b>state vector</b> and write the physics as a first-order differential equation:</p>
+    <math display="block">
+      <mi mathvariant="bold">x</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msub><mi>s</mi><mi>x</mi></msub></mtd></mtr><mtr><mtd><msub><mi>s</mi><mi>y</mi></msub></mtd></mtr><mtr><mtd><msub><mi>v</mi><mi>x</mi></msub></mtd></mtr><mtr><mtd><msub><mi>v</mi><mi>y</mi></msub></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>,</mo><mspace width="1.5em"/>
+      <mover><mi mathvariant="bold">x</mi><mo>˙</mo></mover><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msub><mi>v</mi><mi>x</mi></msub></mtd></mtr><mtr><mtd><msub><mi>v</mi><mi>y</mi></msub></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mo>−</mo><mi>g</mi></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>=</mo>
+      <munder><munder><mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow><mo>⏟</mo></munder><mi mathvariant="bold">F</mi></munder>
+      <mi mathvariant="bold">x</mi><mo>+</mo>
+      <munder><munder><mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mo>−</mo><mi>g</mi></mtd></mtr></mtable><mo>]</mo></mrow><mo>⏟</mo></munder><mi mathvariant="bold">b</mi></munder>
+    </math>
+    <p>For a small time step the derivative is approximately constant, so we step forward with the <b>Euler method</b>, <b>x</b><sub>k+1</sub> ≈ <b>x</b><sub>k</sub> + Δ<i>t</i> · <b>ẋ</b><sub>k</sub>:</p>
+    <math display="block">
+      <msub><mi mathvariant="bold">x</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>≈</mo>
+      <munder><munder><mrow><mo>(</mo><mi mathvariant="bold">I</mi><mo>+</mo><mi>Δt</mi><mspace width="0.15em"/><mi mathvariant="bold">F</mi><mo>)</mo></mrow><mo>⏟</mo></munder><mi mathvariant="bold">A</mi></munder>
+      <msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo>
+      <munder><munder><mrow><mi>Δt</mi><mspace width="0.15em"/><mi mathvariant="bold">b</mi></mrow><mo>⏟</mo></munder><mrow><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi></mrow></munder>
+      <mspace width="1.5em"/>
       <mi mathvariant="bold">A</mi><mo>=</mo>
       <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mi>Δt</mi></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mi>Δt</mi></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow>
       <mo>,</mo><mspace width="0.8em"/>
-      <mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi><mo>=</mo>
-      <mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mo>−</mo><mi>g</mi><mi>Δt</mi></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mi mathvariant="bold">B</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mi>Δt</mi></mtd></mtr></mtable><mo>]</mo></mrow>
       <mo>,</mo><mspace width="0.8em"/>
+      <mi mathvariant="bold">u</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mo>−</mo><mi>g</mi></mtd></mtr></mtable><mo>]</mo></mrow>
+    </math>
+    <p>Read row by row: <i>new position = old position + velocity · Δt</i>, and <i>new v<sub>y</sub> = old v<sub>y</sub> − g Δt</i>. This is a <b>constant-velocity model</b> with gravity as a known input <b>u</b>.</p>
+    <p class="note"><b>Keep in mind:</b> the model is an approximation. The exact solution has <i>s</i><sub>y,k+1</sub> = <i>s</i><sub>y,k</sub> + <i>v</i><sub>y,k</sub> Δ<i>t</i> <b>− ½ <i>g</i> Δ<i>t</i>²</b>. Euler drops this last term in every step. Small, but it adds up. You will meet it again in Task 3.</p>
+
+    <p><b>Process noise.</b> Every model is wrong a little: discretisation errors, wind, a stone that is not a perfect point. We describe all of it as a random acceleration <i>a</i><sub>k</sub> ~ 𝒩(0, <i>σ</i><sub>a</sub>²) acting during one step. A constant acceleration changes the position by ½ <i>a</i> Δ<i>t</i>² and the velocity by <i>a</i> Δ<i>t</i>:</p>
+    <math display="block">
+      <msub><mi mathvariant="bold">x</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi><mo>+</mo><munder><munder><mrow><mi mathvariant="bold">G</mi><mspace width="0.1em"/><msub><mi>a</mi><mi>k</mi></msub></mrow><mo>⏟</mo></munder><msub><mi mathvariant="bold">w</mi><mi>k</mi></msub></munder>
+      <mo>,</mo><mspace width="1.2em"/>
+      <mi mathvariant="bold">G</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>Δ</mi><msup><mi>t</mi><mn>2</mn></msup></mtd></mtr><mtr><mtd><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>Δ</mi><msup><mi>t</mi><mn>2</mn></msup></mtd></mtr><mtr><mtd><mi>Δt</mi></mtd></mtr><mtr><mtd><mi>Δt</mi></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>,</mo><mspace width="1.2em"/>
+      <msub><mi mathvariant="bold">w</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">Q</mi><mo>)</mo>
+      <mo>,</mo><mspace width="0.6em"/>
+      <mi mathvariant="bold">Q</mi><mo>=</mo><msubsup><mi>σ</mi><mi>a</mi><mn>2</mn></msubsup><mspace width="0.1em"/><mi mathvariant="bold">G</mi><msup><mi mathvariant="bold">G</mi><mi>T</mi></msup>
+    </math>
+    <p>In the code, <code>Q = scale(mul(G, T(G)), 50)</code> means <i>σ</i><sub>a</sub>² = 50 (m/s²)².</p>
+
+    <p><b>Measurement model.</b> The knights report only the position, disturbed by independent noise with standard deviation <i>σ</i> in each direction:</p>
+    <math display="block">
+      <msub><mi mathvariant="bold">z</mi><mi>k</mi></msub><mo>=</mo><mi mathvariant="bold">H</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><msub><mi mathvariant="bold">v</mi><mi>k</mi></msub>
+      <mo>,</mo><mspace width="1.2em"/>
       <mi mathvariant="bold">H</mi><mo>=</mo>
       <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>,</mo><mspace width="1.2em"/>
+      <msub><mi mathvariant="bold">v</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">R</mi><mo>)</mo>
+      <mo>,</mo><mspace width="0.6em"/>
+      <mi mathvariant="bold">R</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msup><mi>σ</mi><mn>2</mn></msup></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><msup><mi>σ</mi><mn>2</mn></msup></mtd></mtr></mtable><mo>]</mo></mrow>
     </math>
 
-    <details class="ref">
-      <summary>Kalman filter equations (from the lecture)</summary>
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">3</span> Measuring the error <small>· Tasks 2–4</small></h3>
+    <p>To judge any estimate <b>ŝ</b><sub>k</sub> (an observation or a filter output) we compare it with the true position <b>s</b><sub>k</sub> at the same time. The error is the Euclidean distance, averaged over all <i>N</i> time steps:</p>
+    <math display="block">
+      <msub><mi>e</mi><mi>k</mi></msub><mo>=</mo><mo>‖</mo><msub><mover><mi mathvariant="bold">s</mi><mo>^</mo></mover><mi>k</mi></msub><mo>−</mo><msub><mi mathvariant="bold">s</mi><mi>k</mi></msub><mo>‖</mo><mo>=</mo>
+      <msqrt><msup><mrow><mo>(</mo><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>x</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>s</mi><mrow><mi>x</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo>(</mo><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>y</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>s</mi><mrow><mi>y</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo></mrow><mn>2</mn></msup></msqrt>
+      <mo>,</mo><mspace width="1.5em"/>
+      <mover><mi>e</mi><mo>¯</mo></mover><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msub><mi>e</mi><mi>k</mi></msub>
+    </math>
+    <p>The same formula works for the velocity in Task 4. A sanity check for Task 2: for 2-D Gaussian noise with standard deviation <i>σ</i> per axis, the expected distance is <i>σ</i>√(π/2) ≈ 1.25 <i>σ</i>.</p>
+
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">4</span> Recap: the open-loop observer <small>· Task 3, step 1</small></h3>
+    <p>The open-loop observer from the slides simply runs the model forward from an initial guess <b>x̂</b><sub>0</sub>. The noise is unknown, so we use its mean, zero:</p>
+    <math display="block">
+      <msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi></msub><mo>=</mo><mi mathvariant="bold">A</mi><msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi>
+    </math>
+    <p>Subtracting this from the true system gives the estimation error <b>e</b><sub>k</sub> = <b>x</b><sub>k</sub> − <b>x̂</b><sub>k</sub>:</p>
+    <math display="block">
+      <msub><mi mathvariant="bold">e</mi><mi>k</mi></msub><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">e</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi mathvariant="bold">w</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub>
+    </math>
+    <p>Nothing in this equation pulls the error back to zero. A wrong start and every bit of model error are carried along forever, and new errors are added in each step. We can track how large the error is with its <b>covariance</b> <b>P</b><sub>k</sub> = E[<b>e</b><sub>k</sub><b>e</b><sub>k</sub><sup>T</sup>]. Since <b>w</b><sub>k−1</sub> is independent of <b>e</b><sub>k−1</sub>:</p>
+    <math display="block">
+      <msub><mi mathvariant="bold">P</mi><mi>k</mi></msub><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">P</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi mathvariant="bold">A</mi><mi>T</mi></msup><mo>+</mo><mi mathvariant="bold">Q</mi>
+    </math>
+    <p>The uncertainty only grows. The diagonal of <b>P</b> holds the variances of <i>s</i><sub>x</sub>, <i>s</i><sub>y</sub>, <i>v</i><sub>x</sub>, <i>v</i><sub>y</sub>; for example ±2√<i>P</i><sub>11</sub> is a 95 % band for <i>s</i><sub>x</sub>. These two equations are exactly the <b>prediction step</b> of the Kalman filter.</p>
+
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">5</span> Closing the loop: the Kalman filter <small>· Tasks 3–5</small></h3>
+    <p>To stop the drift we feed back the measurement. After predicting <b>x̂</b><sub>k</sub><sup>−</sup> (the superscript “−” means “before the measurement”), we compare what we <i>expect</i> to see, <b>H x̂</b><sub>k</sub><sup>−</sup>, with what we <i>do</i> see, <b>z</b><sub>k</sub>, and correct by a gain <b>K</b><sub>k</sub>:</p>
+    <math display="block">
+      <msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi></msub><mo>=</mo><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup><mo>+</mo><msub><mi mathvariant="bold">K</mi><mi>k</mi></msub><munder><munder><mrow><mo>(</mo><msub><mi mathvariant="bold">z</mi><mi>k</mi></msub><mo>−</mo><mi mathvariant="bold">H</mi><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup><mo>)</mo></mrow><mo>⏟</mo></munder><mtext>innovation</mtext></munder>
+    </math>
+    <p>The question is how much to trust the measurement, i.e. how to choose <b>K</b><sub>k</sub>. The Kalman filter picks the gain that makes the variance of the new estimate as small as possible.</p>
+
+    <p><b>The idea in one dimension.</b> Say the prediction is <i>x̂</i><sup>−</sup> with variance <i>P</i><sup>−</sup> and a sensor measures <i>z</i> = <i>x</i> + <i>v</i> with variance <i>R</i>. We combine both as <i>x̂</i> = (1 − <i>K</i>) <i>x̂</i><sup>−</sup> + <i>K z</i>. Prediction error and measurement noise are independent, so</p>
+    <math display="block">
+      <mi>P</mi><mo>(</mo><mi>K</mi><mo>)</mo><mo>=</mo><msup><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>K</mi><mo>)</mo></mrow><mn>2</mn></msup><msup><mi>P</mi><mo>−</mo></msup><mo>+</mo><msup><mi>K</mi><mn>2</mn></msup><mi>R</mi>
+      <mspace width="1em"/><mover><mo>⇒</mo><mrow><mi>d</mi><mi>P</mi><mo>/</mo><mi>d</mi><mi>K</mi><mo>=</mo><mn>0</mn></mrow></mover><mspace width="1em"/>
+      <mi>K</mi><mo>=</mo><mfrac><msup><mi>P</mi><mo>−</mo></msup><mrow><msup><mi>P</mi><mo>−</mo></msup><mo>+</mo><mi>R</mi></mrow></mfrac>
+      <mo>,</mo><mspace width="1.2em"/>
+      <mi>P</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>K</mi><mo>)</mo><msup><mi>P</mi><mo>−</mo></msup><mo>=</mo><mfrac><mrow><msup><mi>P</mi><mo>−</mo></msup><mi>R</mi></mrow><mrow><msup><mi>P</mi><mo>−</mo></msup><mo>+</mo><mi>R</mi></mrow></mfrac>
+    </math>
+    <ul>
+      <li>The gain is always between 0 and 1: the estimate lies <i>between</i> prediction and measurement.</li>
+      <li>Perfect sensor (<i>R</i> → 0): <i>K</i> → 1, the filter follows the measurement. Perfect model (<i>P</i><sup>−</sup> → 0): <i>K</i> → 0, the measurement is ignored.</li>
+      <li>The new variance is smaller than both <i>P</i><sup>−</sup> and <i>R</i>: fusing two uncertain sources beats each source alone.</li>
+    </ul>
+
+    <p><b>The same with matrices.</b> With a state vector and a measurement matrix <b>H</b>, the division becomes a matrix inverse. <b>H P</b><sup>−</sup><b>H</b><sup>T</sup> is the predicted uncertainty <i>in measurement space</i>, so <b>S</b> = <b>H P</b><sup>−</sup><b>H</b><sup>T</sup> + <b>R</b> plays the role of <i>P</i><sup>−</sup> + <i>R</i>. Together with the prediction from section 4, this gives the complete algorithm:</p>
+
+    <div class="kf-box">
+      <p class="kf-init"><b>Initialise</b> with a guess <b>x̂</b><sub>0</sub> and its uncertainty <b>P</b><sub>0</sub>. Then for <i>k</i> = 1, 2, …</p>
       <div class="kf-grid">
         <div>
-          <h3>Predict <small>— what should have happened</small></h3>
+          <h4>Predict <small>— what should have happened</small></h4>
           <math display="block">
             <mtable columnalign="right left" rowspacing="0.6em">
               <mtr><mtd><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup></mtd><mtd><mo>=</mo><mi mathvariant="bold">A</mi><msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi></mtd></mtr>
@@ -99,7 +208,7 @@
           </math>
         </div>
         <div>
-          <h3>Update <small>— what we saw happen</small></h3>
+          <h4>Update <small>— what we saw happen</small></h4>
           <math display="block">
             <mtable columnalign="right left" rowspacing="0.6em">
               <mtr><mtd><msub><mi mathvariant="bold">K</mi><mi>k</mi></msub></mtd><mtd><mo>=</mo><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup><msup><mi mathvariant="bold">H</mi><mi>T</mi></msup><msup><mrow><mo>(</mo><mi mathvariant="bold">H</mi><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup><msup><mi mathvariant="bold">H</mi><mi>T</mi></msup><mo>+</mo><mi mathvariant="bold">R</mi><mo>)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mtd></mtr>
@@ -109,7 +218,38 @@
           </math>
         </div>
       </div>
-    </details>
+      <p class="kf-dims">Sizes in our example: <b>x̂</b> 4×1, <b>P</b>, <b>A</b>, <b>Q</b> 4×4, <b>H</b> 2×4, <b>R</b> 2×2, <b>z</b> 2×1, <b>K</b> 4×2.</p>
+    </div>
+
+    <!-- ---------------------------------------------------------- -->
+    <h3><span class="step">6</span> What the knobs do <small>· Tasks 3–5</small></h3>
+    <p><b>Tuning Q and R (Task 3).</b> Only the <i>ratio</i> of model trust to sensor trust matters for the gain:</p>
+    <ul>
+      <li><b>Q</b> large: “my model is bad”. <b>P</b><sup>−</sup> grows quickly, <b>K</b> is large, the estimate follows the noisy observations.</li>
+      <li><b>R</b> large: “my knights are bad”. <b>K</b> is small, the estimate follows the model and becomes smooth, but it reacts slowly and can drift.</li>
+      <li>A good starting point for <b>R</b> is the true sensor variance, <i>σ</i><sup>2</sup> on the diagonal. <b>Q</b> has to cover every model error, including the term Euler neglects.</li>
+    </ul>
+
+    <p><b>Estimating what nobody measured (Task 4).</b> <b>H</b> picks out only the position, yet the velocity is corrected too. The reason is in <b>P</b>. Look at one axis with state [<i>s</i>, <i>v</i>]: starting from an uncorrelated <b>P</b> = diag(<i>p</i><sub>s</sub>, <i>p</i><sub>v</sub>), one prediction step gives (ignoring <b>Q</b>)</p>
+    <math display="block">
+      <msup><mi mathvariant="bold">P</mi><mo>−</mo></msup><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mi>Δt</mi></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msub><mi>p</mi><mi>s</mi></msub></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><msub><mi>p</mi><mi>v</mi></msub></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mi>Δt</mi></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msub><mi>p</mi><mi>s</mi></msub><mo>+</mo><mi>Δ</mi><msup><mi>t</mi><mn>2</mn></msup><msub><mi>p</mi><mi>v</mi></msub></mtd><mtd><mi>Δt</mi><mspace width="0.1em"/><msub><mi>p</mi><mi>v</mi></msub></mtd></mtr><mtr><mtd><mi>Δt</mi><mspace width="0.1em"/><msub><mi>p</mi><mi>v</mi></msub></mtd><mtd><msub><mi>p</mi><mi>v</mi></msub></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mspace width="1em"/><mo>⇒</mo><mspace width="1em"/>
+      <mi mathvariant="bold">K</mi><mo>=</mo><mfrac><mn>1</mn><mrow><msubsup><mi>P</mi><mn>11</mn><mo>−</mo></msubsup><mo>+</mo><mi>R</mi></mrow></mfrac>
+      <mrow><mo>[</mo><mtable><mtr><mtd><msubsup><mi>P</mi><mn>11</mn><mo>−</mo></msubsup></mtd></mtr><mtr><mtd><mi>Δt</mi><mspace width="0.1em"/><msub><mi>p</mi><mi>v</mi></msub></mtd></mtr></mtable><mo>]</mo></mrow>
+    </math>
+    <p>Because a velocity error turns into a position error one step later, the model creates a correlation between the two (the off-diagonal entries). The second row of <b>K</b> is therefore not zero: a surprising position also corrects the velocity. The velocity is <i>inferred</i> from how positions change over time, so it needs a few steps to settle.</p>
+
+    <p><b>No observations (Bonus).</b> Without a measurement there is nothing to update, which is the same as <b>K</b><sub>k</sub> = 0: the filter falls back to the open-loop observer, <b>x̂</b><sub>k</sub> = <b>x̂</b><sub>k</sub><sup>−</sup> and <b>P</b><sub>k</sub> = <b>P</b><sub>k</sub><sup>−</sup>, and the uncertainty grows again. The stone lands between the two prediction steps where <i>ŝ</i><sub>y</sub> changes sign; linear interpolation between them gives</p>
+    <math display="block">
+      <msup><mi>t</mi><mo>*</mo></msup><mo>=</mo><msub><mi>t</mi><mi>k</mi></msub><mo>+</mo><mfrac><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>y</mi><mo>,</mo><mi>k</mi></mrow></msub><mrow><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>y</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>−</mo><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>y</mi><mo>,</mo><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></mfrac><mspace width="0.15em"/><mi>Δt</mi>
+      <mo>,</mo><mspace width="1.2em"/>
+      <msubsup><mover><mi>s</mi><mo>^</mo></mover><mi>x</mi><mo>*</mo></msubsup><mo>≈</mo><msub><mover><mi>s</mi><mo>^</mo></mover><mrow><mi>x</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>+</mo><msub><mover><mi>v</mi><mo>^</mo></mover><mrow><mi>x</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>(</mo><msup><mi>t</mi><mo>*</mo></msup><mo>−</mo><msub><mi>t</mi><mi>k</mi></msub><mo>)</mo><mspace width="0.6em"/><mo>±</mo><mspace width="0.3em"/><mn>2</mn><msqrt><msub><mi>P</mi><mn>11</mn></msub></msqrt>
+    </math>
   </section>
 
   <!-- ================================================================ -->
@@ -199,7 +339,7 @@
       <li>Tune the noise covariances <code>Q</code> and <code>R</code> until the filter beats the raw observations. What do large and small values mean?</li>
     </ol>
     <details class="hint"><summary>Hint</summary>
-      <p>Translate the equations from <a href="#model">the model section</a> one by one. Matrix products are written <code>mul(A, B, C)</code>, sums <code>add(A, B)</code>, differences <code>sub(A, B)</code>, transposes <code>T(A)</code> and inverses <code>inv(A)</code>. For example <i>A P A</i><sup>T</sup> + <i>Q</i> becomes <code>add(mul(A, P, T(A)), Q)</code>. A good starting point for <code>R</code> is the variance of the knights' noise, <code>sigma ** 2</code>.</p>
+      <p>Translate the equations from <a href="#model">section 5 of the math</a> one by one. Matrix products are written <code>mul(A, B, C)</code>, sums <code>add(A, B)</code>, differences <code>sub(A, B)</code>, transposes <code>T(A)</code> and inverses <code>inv(A)</code>. For example <i>A P A</i><sup>T</sup> + <i>Q</i> becomes <code>add(mul(A, P, T(A)), Q)</code>. A good starting point for <code>R</code> is the variance of the knights' noise, <code>sigma ** 2</code>.</p>
     </details>
     <div class="task-body"></div>
     <script type="text/plain" class="starter">
@@ -314,7 +454,7 @@
       <li>Afterwards, keep <em>predicting</em> (no update) until the stone lands.</li>
       <li>Plot the estimate and the error. How does the uncertainty <i>P</i> evolve without observations? How far off is the predicted landing point?</li>
     </ol>
-    <details class="hint"><summary>More experiments from the lecture</summary>
+    <details class="hint"><summary>More experiments</summary>
       <ul>
         <li><b>Wrong initial value:</b> start the filter with a wrong <code>x0</code> (e.g. zero velocity) and a large <code>P0</code>. How fast does it converge?</li>
         <li><b>Strong winds high up:</b> add a horizontal disturbance to the true trajectory above a certain height. Which of <code>Q</code> or <code>R</code> helps the filter cope?</li>

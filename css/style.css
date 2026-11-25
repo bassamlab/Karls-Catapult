@@ -158,8 +158,27 @@ details.ref, details.hint {
 }
 details > summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
 details[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.model .muted { color: var(--muted); max-width: 75ch; }
+.model h3 {
+  font-size: 18px; margin: 32px 0 8px; padding-top: 20px;
+  border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.model h3 small { font-size: 13px; font-weight: 500; color: var(--muted); }
+.model .step {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  font-size: 13px; color: var(--accent-text); background: var(--accent);
+}
+.model .note {
+  border-left: 3px solid var(--accent); background: var(--surface-2);
+  padding: 10px 14px; border-radius: 0 8px 8px 0;
+}
+.kf-box {
+  border: 1.5px solid var(--accent); border-radius: 8px; background: var(--surface-2);
+  padding: 4px 16px; margin: 16px 0;
+}
+.kf-box .kf-init, .kf-box .kf-dims { font-size: 14px; color: var(--muted); }
 .kf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
-.kf-grid h3 { font-size: 15px; margin: 8px 0 0; }
+.kf-grid h3, .kf-grid h4 { font-size: 15px; margin: 8px 0 0; }
 .kf-grid small { font-weight: 400; color: var(--muted); }
 
 /* ---------- Tasks ---------- */
