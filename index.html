@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Karl's Catapult · Kalman Filter Workshop</title>
+  <meta name="description" content="Hands-on workshop: state estimation and the Kalman filter, in the browser.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Karl's Catapult <span>· Kalman filter workshop</span></a>
+    <nav class="progress" aria-label="Tasks"></nav>
+    <div class="actions">
+      <button type="button" class="btn" id="open-toolbox">Toolbox</button>
+      <button type="button" class="btn" id="download" title="Download all your code as one .js file">Save code</button>
+      <button type="button" class="btn primary" id="run-all">▶ Run all</button>
+      <button type="button" class="btn icon" id="theme" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="intro">
+    <p class="eyebrow">State estimation and the Kalman filter · Hands-on</p>
+    <h1>Help Karl the Little take the castle</h1>
+    <p class="lead">Karl the Little wants to conquer a castle with his catapult. He knows the physics of a throw — but his model alone cannot tell him where the stones really are, and his knights' observations are anything but precise. Your job: combine both with a Kalman filter.</p>
+
+    <div class="howto">
+      <h2>How this works</h2>
+      <ul>
+        <li>Every task has a code editor with starter code in <b>JavaScript</b>. Look for <code>TODO</code> comments.</li>
+        <li><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> or <b>▶ Run</b> executes the task. Tasks build on each other like notebook cells: running Task 3 also runs Tasks 1 and 2.</li>
+        <li>Below the output, automatic <b>checks</b> tell you whether you are on the right track.</li>
+        <li>Matrix and plotting helpers are listed in the <b>Toolbox</b> (top right). Your code is saved in this browser automatically.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="model" id="model">
+    <h2>The model</h2>
+    <p>Neglecting air drag, a stone thrown from the origin with speed <i>v</i><sub>0</sub> at angle <i>θ</i><sub>0</sub> follows</p>
+    <math display="block">
+      <mtable columnalign="right left" rowspacing="0.6em">
+        <mtr><mtd><msub><mi>s</mi><mi>x</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo></mtd><mtd><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>⁢</mo><mi>cos</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>⋅</mo><mi>t</mi></mtd></mtr>
+        <mtr><mtd><msub><mi>s</mi><mi>y</mi></msub><mo>(</mo><mi>t</mi><mo>)</mo></mtd><mtd><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>⁢</mo><mi>sin</mi><mo>⁡</mo><msub><mi>θ</mi><mn>0</mn></msub><mo>⋅</mo><mi>t</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>g</mi><msup><mi>t</mi><mn>2</mn></msup></mtd></mtr>
+      </mtable>
+    </math>
+    <p>with gravity <i>g</i> = 9.81 m/s². The velocity is the time derivative: <i>v</i><sub>x</sub> = <i>v</i><sub>0</sub> cos <i>θ</i><sub>0</sub> stays constant, <i>v</i><sub>y</sub> = <i>v</i><sub>0</sub> sin <i>θ</i><sub>0</sub> − <i>g t</i> decreases.</p>
+
+    <p>For the filter we use the discrete-time state-space form from the lecture, with state <b>x</b> = [<i>s</i><sub>x</sub>, <i>s</i><sub>y</sub>, <i>v</i><sub>x</sub>, <i>v</i><sub>y</sub>]<sup>T</sup> and time step Δ<i>t</i>:</p>
+    <math display="block">
+      <mtable columnalign="right left" rowspacing="0.6em">
+        <mtr><mtd><msub><mi mathvariant="bold">x</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></mtd><mtd><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi><mo>+</mo><msub><mi mathvariant="bold">w</mi><mi>k</mi></msub><mo>,</mo><mspace width="1em"/><msub><mi mathvariant="bold">w</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">Q</mi><mo>)</mo></mtd></mtr>
+        <mtr><mtd><msub><mi mathvariant="bold">z</mi><mi>k</mi></msub></mtd><mtd><mo>=</mo><mi mathvariant="bold">H</mi><msub><mi mathvariant="bold">x</mi><mi>k</mi></msub><mo>+</mo><msub><mi mathvariant="bold">v</mi><mi>k</mi></msub><mo>,</mo><mspace width="1em"/><msub><mi mathvariant="bold">v</mi><mi>k</mi></msub><mo>∼</mo><mi mathvariant="script">N</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi mathvariant="bold">R</mi><mo>)</mo></mtd></mtr>
+      </mtable>
+    </math>
+    <p>A constant-velocity motion model, gravity as a known (systematic) disturbance <b>u</b>, and an observation that measures only the position:</p>
+    <math display="block">
+      <mi mathvariant="bold">A</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mi>Δt</mi></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mi>Δt</mi></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>,</mo><mspace width="0.8em"/>
+      <mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mo>−</mo><mi>g</mi><mi>Δt</mi></mtd></mtr></mtable><mo>]</mo></mrow>
+      <mo>,</mo><mspace width="0.8em"/>
+      <mi mathvariant="bold">H</mi><mo>=</mo>
+      <mrow><mo>[</mo><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd></mtr></mtable><mo>]</mo></mrow>
+    </math>
+
+    <details class="ref">
+      <summary>Kalman filter equations (from the lecture)</summary>
+      <div class="kf-grid">
+        <div>
+          <h3>Predict <small>— what should have happened</small></h3>
+          <math display="block">
+            <mtable columnalign="right left" rowspacing="0.6em">
+              <mtr><mtd><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup></mtd><mtd><mo>=</mo><mi mathvariant="bold">A</mi><msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi mathvariant="bold">B</mi><mi mathvariant="bold">u</mi></mtd></mtr>
+              <mtr><mtd><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup></mtd><mtd><mo>=</mo><mi mathvariant="bold">A</mi><msub><mi mathvariant="bold">P</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><msup><mi mathvariant="bold">A</mi><mi>T</mi></msup><mo>+</mo><mi mathvariant="bold">Q</mi></mtd></mtr>
+            </mtable>
+          </math>
+        </div>
+        <div>
+          <h3>Update <small>— what we saw happen</small></h3>
+          <math display="block">
+            <mtable columnalign="right left" rowspacing="0.6em">
+              <mtr><mtd><msub><mi mathvariant="bold">K</mi><mi>k</mi></msub></mtd><mtd><mo>=</mo><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup><msup><mi mathvariant="bold">H</mi><mi>T</mi></msup><msup><mrow><mo>(</mo><mi mathvariant="bold">H</mi><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup><msup><mi mathvariant="bold">H</mi><mi>T</mi></msup><mo>+</mo><mi mathvariant="bold">R</mi><mo>)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mtd></mtr>
+              <mtr><mtd><msub><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi></msub></mtd><mtd><mo>=</mo><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup><mo>+</mo><msub><mi mathvariant="bold">K</mi><mi>k</mi></msub><mo>(</mo><msub><mi mathvariant="bold">z</mi><mi>k</mi></msub><mo>−</mo><mi mathvariant="bold">H</mi><msubsup><mover><mi mathvariant="bold">x</mi><mo>^</mo></mover><mi>k</mi><mo>−</mo></msubsup><mo>)</mo></mtd></mtr>
+              <mtr><mtd><msub><mi mathvariant="bold">P</mi><mi>k</mi></msub></mtd><mtd><mo>=</mo><mo>(</mo><mi mathvariant="bold">I</mi><mo>−</mo><msub><mi mathvariant="bold">K</mi><mi>k</mi></msub><mi mathvariant="bold">H</mi><mo>)</mo><msubsup><mi mathvariant="bold">P</mi><mi>k</mi><mo>−</mo></msubsup></mtd></mtr>
+            </mtable>
+          </math>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================================================================ -->
+  <section class="task" id="task-1" data-task="1" data-short="1" data-check="trajectory">
+    <div class="task-head"><span class="num">Task 1</span><h2>The true trajectory and the optimal angle</h2></div>
+    <p>Before any stone flies, Karl wants to know how his catapult <em>should</em> behave. Compute the true trajectory of a stone thrown at 14 m/s and find the angle that throws it the furthest.</p>
+    <ol class="todo">
+      <li>Implement <i>s</i><sub>x</sub>(<i>t</i>) and <i>s</i><sub>y</sub>(<i>t</i>) to compute the true trajectory <code>sTrue</code>.</li>
+      <li>Find the launch angle <code>theta</code> that maximises the throwing distance.</li>
+      <li>Compute the time of landing <code>tf</code> (the stone is back on the ground) and use it as the end of the time vector.</li>
+    </ol>
+    <details class="hint"><summary>Hint</summary>
+      <p>Solve <i>s</i><sub>y</sub>(<i>t</i>) = 0 for <i>t</i> &gt; 0 to get the landing time. For the angle you can either reason analytically or loop over many angles, e.g. <code>linspace(deg2rad(1), deg2rad(89), 500)</code>, and keep the one with the largest distance (<code>argmax</code>). <code>plotLines</code> lets you plot distance over angle.</p>
+    </details>
+    <div class="task-body"></div>
+    <script type="text/plain" class="starter">
+      // ----- Constants -----
+      const speed = 14;           // launch speed [m/s]
+      const g = 9.81;             // gravity [m/s²]
+      const p0 = [0, 0];          // launch position [m]
+      const t0 = 0;               // start time [s]
+
+      let theta = deg2rad(20);    // launch angle [rad]   TODO: find the optimal angle
+      let v0 = [speed * Math.cos(theta), speed * Math.sin(theta)];  // initial velocity [m/s]
+      let tf = 2;                 // time of landing [s]  TODO: compute it
+
+      // ----- True trajectory -----
+      const tTrue = linspace(t0, tf, 2001);   // dense time vector
+      const sTrue = tTrue.map(t => [
+        0,   // TODO: s_x(t)
+        0,   // TODO: s_y(t)
+      ]);
+
+      plotScene({ title: 'Optimal trajectory', p0, v0, truth: sTrue });
+
+      print('Optimal throwing angle: ' + rad2deg(theta).toFixed(2) + '°');
+      print('Time of landing:        ' + tf.toFixed(2) + ' s');
+    </script>
+  </section>
+
+  <!-- ================================================================ -->
+  <section class="task" id="task-2" data-task="2" data-short="2" data-check="observations">
+    <div class="task-head"><span class="num">Task 2</span><h2>The knights' observations</h2></div>
+    <p>Karl's knights are supposed to track every stone through the air. Unfortunately, they found their goblets more interesting than their duties — their measurements are shaky. Simulate what they observe and how wrong it is.</p>
+    <ol class="todo">
+      <li>Create the observation times <code>tObs</code> for a measurement rate of 10 Hz.</li>
+      <li>Generate the observations <code>sObs</code>: the true position plus random noise (<code>randn(0, sigma)</code>).</li>
+      <li>Compute the error of each observation (its distance to the true position) and the mean error <code>meanErrObs</code>.</li>
+    </ol>
+    <details class="hint"><summary>Hint</summary>
+      <p><code>dist(a, b)</code> returns the Euclidean distance between two points and <code>mean(array)</code> the average. <code>sTrueAtObs[k]</code> is the true position at time <code>tObs[k]</code>.</p>
+    </details>
+    <div class="task-body"></div>
+    <script type="text/plain" class="starter">
+      const dt = 0.1;                    // time step [s]  TODO: does this match 10 Hz?
+      const tObs = range(t0, tf, dt);    // observation times
+
+      // ----- The knights' measurements -----
+      seed(0);                           // same random numbers on every run
+      const sigma = 0.3;                 // how shaky are the knights? [m]
+      const sTrueAtObs = sampleAt(tObs, tTrue, sTrue);  // true positions at tObs
+      const sObs = sTrueAtObs.map(p => [
+        p[0],   // TODO: add noise
+        p[1],   // TODO: add noise
+      ]);
+
+      plotScene({ title: 'True trajectory and observations', p0, v0, truth: sTrue, observations: sObs });
+
+      // ----- Error of the observations -----
+      const errObs = sObs.map((s, k) => 0);   // TODO: distance between s and sTrueAtObs[k]
+      const meanErrObs = 0;                    // TODO: mean of errObs
+
+      plotBars('Error of the observations', [{ x: tObs, y: errObs, label: 'observation error' }],
+        { xlabel: 't [s]', ylabel: 'error [m]' });
+
+      print('Mean position error of observations: ' + meanErrObs.toFixed(4) + ' m');
+    </script>
+  </section>
+
+  <!-- ================================================================ -->
+  <section class="task" id="task-3" data-task="3" data-short="3" data-check="kalman">
+    <div class="task-head"><span class="num">Task 3</span><h2>Kalman filter: predict and update</h2></div>
+    <p>Karl decides to combine what <em>should</em> happen (his model) with what his knights <em>saw</em> happen (the observations). Time for a Kalman filter.</p>
+    <ol class="todo">
+      <li>Implement the <b>prediction</b> step. Run the filter with prediction only (<code>x = xPred; P = PPred;</code>) and look at the error. Why does the open-loop prediction drift away from the true trajectory?</li>
+      <li>Implement the <b>update</b> step and compute the mean error <code>meanErrEst</code>.</li>
+      <li>Tune the noise covariances <code>Q</code> and <code>R</code> until the filter beats the raw observations. What do large and small values mean?</li>
+    </ol>
+    <details class="hint"><summary>Hint</summary>
+      <p>Translate the equations from <a href="#model">the model section</a> one by one. Matrix products are written <code>mul(A, B, C)</code>, sums <code>add(A, B)</code>, differences <code>sub(A, B)</code>, transposes <code>T(A)</code> and inverses <code>inv(A)</code>. For example <i>A P A</i><sup>T</sup> + <i>Q</i> becomes <code>add(mul(A, P, T(A)), Q)</code>. A good starting point for <code>R</code> is the variance of the knights' noise, <code>sigma ** 2</code>.</p>
+    </details>
+    <div class="task-body"></div>
+    <script type="text/plain" class="starter">
+      // ----- Initial state and covariance -----
+      const x0 = col([p0[0], p0[1], v0[0], v0[1]]);  // [s_x, s_y, v_x, v_y]ᵀ
+      const P0 = eye(4);
+
+      // ----- Sensor model -----
+      const H = [[1, 0, 0, 0],
+                 [0, 1, 0, 0]];                      // we only measure the position
+      const R = diag([50, 50]);                      // measurement noise  TODO: tune
+
+      // ----- Motion model -----
+      const A = [[1, 0, dt, 0],
+                 [0, 1, 0, dt],
+                 [0, 0, 1,  0],
+                 [0, 0, 0,  1]];
+      const B = diag([0, 0, 0, dt]);                 // gravity acts on v_y only
+      const u = col([0, 0, 0, -g]);                  // systematic disturbance: gravity
+      const G = col([0.5 * dt * dt, 0.5 * dt * dt, dt, dt]);  // how model errors affect each state
+      const Q = scale(mul(G, T(G)), 50);             // process noise  TODO: tune
+
+      // ----- Kalman filter loop -----
+      let x = x0, P = P0, time = t0;
+      const est = [{ t: time, x: x, P: P }];
+
+      for (let k = 1; k < tObs.length; k++) {
+        // --- Prediction: what should have happened ---
+        const xPred = x;   // TODO: A·x + B·u
+        const PPred = P;   // TODO: A·P·Aᵀ + Q
+        time = time + dt;
+
+        // Step 1 — prediction only:
+        x = xPred;
+        P = PPred;
+
+        // --- Update: what we saw happen ---
+        const z = col(sObs[k]);   // current observation
+        // TODO: Kalman gain  K = PPred·Hᵀ·(H·PPred·Hᵀ + R)⁻¹
+        // TODO: state        x = xPred + K·(z − H·xPred)
+        // TODO: covariance   P = (I − K·H)·PPred
+
+        est.push({ t: time, x: x, P: P });
+      }
+
+      const tEst = est.map(e => e.t);
+      const sEst = est.map(e => [e.x[0][0], e.x[1][0]]);   // positions from the state
+
+      plotScene({ title: 'Kalman filter estimate', p0, v0, truth: sTrue, observations: sObs, estimate: sEst });
+
+      // ----- Error compared to the true trajectory -----
+      const sTrueAtEst = sampleAt(tEst, tTrue, sTrue);
+      const errEst = sEst.map((s, k) => 0);   // TODO
+      const meanErrEst = 0;                    // TODO
+
+      plotBars('Position error: observations vs. Kalman filter', [
+        { x: tObs, y: errObs, label: 'observations' },
+        { x: tEst, y: errEst, label: 'Kalman filter' },
+      ], { xlabel: 't [s]', ylabel: 'error [m]' });
+
+      print('Mean position error of observations: ' + meanErrObs.toFixed(4) + ' m');
+      print('Mean position error of estimation:   ' + meanErrEst.toFixed(4) + ' m');
+    </script>
+  </section>
+
+  <!-- ================================================================ -->
+  <section class="task" id="task-4" data-task="4" data-short="4" data-check="velocity">
+    <div class="task-head"><span class="num">Task 4</span><h2>Estimating what nobody measured</h2></div>
+    <p>The knights only report positions — yet the filter state also contains the velocity. How good is the filter at estimating something that is never measured?</p>
+    <ol class="todo">
+      <li>Compute the true velocity <code>vTrue</code> at every estimation time.</li>
+      <li>Compute the velocity error <code>errVel</code> and its mean <code>meanErrVel</code>.</li>
+      <li>Compare estimated and true velocity in both directions. Where is the estimate worst, and why?</li>
+    </ol>
+    <div class="task-body"></div>
+    <script type="text/plain" class="starter">
+      // Estimated velocity: the last two entries of the state
+      const vEst = est.map(e => [e.x[2][0], e.x[3][0]]);
+
+      // True velocity at the estimation times
+      const vTrue = tEst.map(t => [
+        0,   // TODO: v_x(t)
+        0,   // TODO: v_y(t)
+      ]);
+
+      const errVel = vEst.map((v, k) => 0);   // TODO
+      const meanErrVel = 0;                    // TODO
+
+      plotLines('Velocity in x', [
+        { x: tEst, y: vTrue.map(v => v[0]), label: 'true v_x' },
+        { x: tEst, y: vEst.map(v => v[0]), label: 'estimated v_x', dashed: true },
+      ], { xlabel: 't [s]', ylabel: 'v_x [m/s]' });
+
+      plotLines('Velocity in y', [
+        { x: tEst, y: vTrue.map(v => v[1]), label: 'true v_y' },
+        { x: tEst, y: vEst.map(v => v[1]), label: 'estimated v_y', dashed: true },
+      ], { xlabel: 't [s]', ylabel: 'v_y [m/s]' });
+
+      plotBars('Velocity error', [{ x: tEst, y: errVel, label: 'velocity error' }],
+        { xlabel: 't [s]', ylabel: 'error [m/s]' });
+
+      print('Mean velocity error: ' + meanErrVel.toFixed(4) + ' m/s = ' + (meanErrVel * 3.6).toFixed(3) + ' km/h');
+    </script>
+  </section>
+
+  <!-- ================================================================ -->
+  <section class="task bonus" id="task-5" data-task="5" data-short="★">
+    <div class="task-head"><span class="num">Bonus</span><h2>Behind the castle wall</h2></div>
+    <p>The castle wall blocks the knights' view: they can only see the first half of each flight. Can the filter still tell Karl where the stone lands?</p>
+    <ol class="todo">
+      <li>Change your filter so that it only uses observations while <i>t</i> ≤ ½ <i>t</i><sub>f</sub>.</li>
+      <li>Afterwards, keep <em>predicting</em> (no update) until the stone lands.</li>
+      <li>Plot the estimate and the error. How does the uncertainty <i>P</i> evolve without observations? How far off is the predicted landing point?</li>
+    </ol>
+    <details class="hint"><summary>More experiments from the lecture</summary>
+      <ul>
+        <li><b>Wrong initial value:</b> start the filter with a wrong <code>x0</code> (e.g. zero velocity) and a large <code>P0</code>. How fast does it converge?</li>
+        <li><b>Strong winds high up:</b> add a horizontal disturbance to the true trajectory above a certain height. Which of <code>Q</code> or <code>R</code> helps the filter cope?</li>
+        <li><b>Model mismatch:</b> set <code>u</code> to zero (Karl forgot gravity). What happens with small and large <code>Q</code>?</li>
+      </ul>
+    </details>
+    <div class="task-body"></div>
+    <script type="text/plain" class="starter">
+      // The castle wall hides the second half of every flight.
+      // Copy your filter loop from Task 3 and change it so that it
+      //   1. only updates with observations while t <= 0.5 · tf, and
+      //   2. keeps predicting (no update) until the stone lands.
+      // Names from earlier tasks are taken — use new ones (e.g. xb, Pb, estB).
+
+      const tVisible = 0.5 * tf;
+
+      // your code here
+
+
+      // Plot, for example, with:
+      // plotScene({ title: 'Behind the wall', p0, v0, truth: sTrue,
+      //             observations: ..., estimate: ..., prediction: ... });
+    </script>
+  </section>
+
+  <footer class="foot">
+    <p>Workshop “State Estimation and Kalman Filter” · Simon Schäfer · Lehrstuhl Informatik 11 – Embedded Software, RWTH Aachen University. See <code>License.txt</code>.</p>
+  </footer>
+</main>
+
+<dialog id="toolbox" aria-labelledby="toolbox-title">
+  <div class="dlg-head">
+    <h2 id="toolbox-title">Toolbox</h2>
+    <button type="button" class="btn icon" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <p>Matrices are arrays of rows: <code>[[1, 2], [3, 4]]</code>. Column vectors are n×1 matrices made with <code>col([…])</code>. Points are plain arrays <code>[x, y]</code>.</p>
+    <h3>Matrices</h3>
+    <table>
+      <tr><td><code>eye(n)</code></td><td>n×n identity matrix</td></tr>
+      <tr><td><code>zeros(r, c)</code>, <code>ones(r, c)</code></td><td>matrix of zeros / ones</td></tr>
+      <tr><td><code>diag([a, b, …])</code></td><td>diagonal matrix</td></tr>
+      <tr><td><code>col([a, b, …])</code></td><td>column vector</td></tr>
+      <tr><td><code>mul(A, B, …)</code></td><td>matrix product A·B·… (numbers act as scalars)</td></tr>
+      <tr><td><code>add(A, B, …)</code>, <code>sub(A, B)</code></td><td>element-wise sum / difference</td></tr>
+      <tr><td><code>scale(A, k)</code></td><td>k·A</td></tr>
+      <tr><td><code>T(A)</code></td><td>transpose Aᵀ</td></tr>
+      <tr><td><code>inv(A)</code></td><td>inverse A⁻¹</td></tr>
+      <tr><td><code>x[i][0]</code></td><td>i-th entry of a column vector (0-based)</td></tr>
+    </table>
+    <h3>Arrays &amp; numbers</h3>
+    <table>
+      <tr><td><code>range(a, b, step)</code></td><td>[a, a+step, …) without b — like <code>numpy.arange</code></td></tr>
+      <tr><td><code>linspace(a, b, n)</code></td><td>n evenly spaced values from a to b</td></tr>
+      <tr><td><code>sampleAt(tq, t, points)</code></td><td>interpolate a trajectory at times tq</td></tr>
+      <tr><td><code>interp(x, xp, fp)</code></td><td>linear interpolation — like <code>numpy.interp</code></td></tr>
+      <tr><td><code>dist(a, b)</code>, <code>norm(v)</code></td><td>Euclidean distance / length</td></tr>
+      <tr><td><code>mean(arr)</code>, <code>sum</code>, <code>max</code>, <code>min</code>, <code>argmax</code></td><td>statistics of an array</td></tr>
+      <tr><td><code>deg2rad(d)</code>, <code>rad2deg(r)</code></td><td>angle conversion</td></tr>
+      <tr><td><code>seed(n)</code>, <code>randn(mu, sigma)</code>, <code>rand()</code></td><td>reproducible random numbers</td></tr>
+      <tr><td><code>arr.map(f)</code>, <code>arr.filter(f)</code></td><td>JavaScript: transform / select elements</td></tr>
+    </table>
+    <h3>Output</h3>
+    <table>
+      <tr><td><code>print(a, b, …)</code></td><td>print numbers, arrays or matrices</td></tr>
+      <tr><td><code>plotScene({ title, p0, v0, truth, observations, estimate, prediction })</code></td><td>the catapult scene; trajectories are arrays of [x, y] points</td></tr>
+      <tr><td><code>plotLines(title, [{ x, y, label, dashed }], { xlabel, ylabel })</code></td><td>line chart</td></tr>
+      <tr><td><code>plotBars(title, [{ x, y, label }], { xlabel, ylabel })</code></td><td>bar chart</td></tr>
+    </table>
+    <h3>Editor</h3>
+    <table>
+      <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd></td><td>run up to this task</td></tr>
+      <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>/</kbd></td><td>comment / uncomment lines</td></tr>
+      <tr><td><kbd>Tab</kbd>, <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>indent / outdent (<kbd>Esc</kbd> then <kbd>Tab</kbd> leaves the editor)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd></td><td>undo (also undoes Reset and Show solution)</td></tr>
+    </table>
+  </div>
+</dialog>
+
+<script src="js/linalg.js"></script>
+<script src="js/plot.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/errors.js"></script>
+<!-- Remove the next line to hide the "Show solution" buttons. -->
+<script src="solutions/solutions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
