@@ -1,4 +1,21 @@
 /*
+ * Karl's Catapult - a hands-on introduction to state estimation and the Kalman filter.
+ *
+ * Copyright (C) 2023 Lehrstuhl Informatik 11 - Embedded Software, RWTH Aachen University
+ * Copyright (C) 2026 Professorship for Adaptive Behavior of Autonomous Vehicles,
+ *                    University of the Bundeswehr Munich
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License version 3 as published by
+ * the Free Software Foundation. It is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the files COPYING and
+ * COPYING.LESSER for details.
+ *
+ * SPDX-License-Identifier: LGPL-3.0-only
+ */
+
+/*
  * Tiny dependency-free code editor: a <textarea> layered over a highlighted
  * <pre>, plus a line-number gutter. Works offline and from file://.
  *

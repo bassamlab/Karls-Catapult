@@ -9,6 +9,7 @@ A hands-on introduction to state estimation and the Kalman filter. Help Karl the
   <img src="https://img.shields.io/badge/dependencies-none-2f8f46?style=for-the-badge" alt="No dependencies badge" />
   <img src="https://img.shields.io/badge/runs-offline-1f5fbf?style=for-the-badge" alt="Runs offline badge" />
   <img src="https://img.shields.io/badge/hosted%20on-GitHub%20Pages-222222?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Pages badge" />
+  <img src="https://img.shields.io/badge/license-LGPL%20v3-blue?style=for-the-badge" alt="LGPL v3 badge" />
 </p>
 
 <p>
@@ -217,7 +218,8 @@ Karls-Catapult/
 ├── solutions/solutions.js   # Sample solutions (optional)
 ├── documentation/images/    # Screenshots for this README
 ├── legacy/                  # The original 2023 Jupyter notebooks
-└── License.txt
+├── COPYING                  # GNU General Public License v3.0
+└── COPYING.LESSER           # GNU Lesser General Public License v3.0
 ```
 
 ## Background
@@ -228,4 +230,7 @@ It was first held as a Jupyter notebook workshop at the [International Summer Sc
 
 ## License
 
-Copyright © 2023 Lehrstuhl Informatik 11 – Embedded Software, RWTH Aachen University. See [License.txt](License.txt) for the terms of use.
+Copyright © 2023 Lehrstuhl Informatik 11 – Embedded Software, RWTH Aachen University<br>
+Copyright © 2026 [Professorship for Adaptive Behavior of Autonomous Vehicles](https://www.unibw.de/cas-en), University of the Bundeswehr Munich
+
+Karl's Catapult is licensed under the [GNU Lesser General Public License v3.0](COPYING.LESSER), which supplements the [GNU General Public License v3.0](COPYING). You may use, share and adapt it, for example for your own courses, as long as modified versions of this project are published under the same license.
