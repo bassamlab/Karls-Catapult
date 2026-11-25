@@ -217,7 +217,7 @@ Karls-Catapult/
 │   └── app.js               # Runner, checks, persistence, page wiring
 ├── solutions/solutions.js   # Sample solutions (optional)
 ├── documentation/images/    # Screenshots for this README
-├── legacy/                  # The original 2023 Jupyter notebooks
+├── legacy/                  # The original 2023 Jupyter notebooks (own license, see below)
 ├── COPYING                  # GNU General Public License v3.0
 └── COPYING.LESSER           # GNU Lesser General Public License v3.0
 ```
@@ -233,4 +233,6 @@ It was first held as a Jupyter notebook workshop at the [International Summer Sc
 Copyright © 2023 Lehrstuhl Informatik 11 – Embedded Software, RWTH Aachen University<br>
 Copyright © 2026 [Professorship for Adaptive Behavior of Autonomous Vehicles](https://www.unibw.de/cas-en), University of the Bundeswehr Munich
 
-Karl's Catapult is licensed under the [GNU Lesser General Public License v3.0](COPYING.LESSER), which supplements the [GNU General Public License v3.0](COPYING). You may use, share and adapt it, for example for your own courses, as long as modified versions of this project are published under the same license.
+Karl's Catapult is licensed under the [GNU Lesser General Public License v3.0](COPYING.LESSER), which supplements the [GNU General Public License v3.0](COPYING). You may use, share and adapt it, for example for your own courses, as long as modified versions of this project are published under the same license. The web version is republished under this license with the written permission of Lehrstuhl Informatik 11 – Embedded Software, RWTH Aachen University.
+
+**Exception:** the original 2023 material in [`legacy/`](legacy) is not covered by the LGPL. It remains under its original terms, see [`legacy/License.txt`](legacy/License.txt).
