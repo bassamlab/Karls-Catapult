@@ -56,26 +56,26 @@ Karl the Little wants to conquer a castle with his catapult. He knows the physic
 
 ### The model
 
-Neglecting air drag, a stone thrown from the origin with speed $v_0$ at angle $\theta_0$ follows
+Neglecting air drag, a stone thrown from the origin with speed $`v_0`$ at angle $`\theta_0`$ follows
 
-$$
+```math
 s_x(t) = v_0 \cos\theta_0 \, t, \qquad
 s_y(t) = v_0 \sin\theta_0 \, t - \tfrac{1}{2} g t^2 .
-$$
+```
 
-For the filter, the throw is written as a discrete-time linear system with the state $\mathbf{x} = [s_x, s_y, v_x, v_y]^T$, a constant-velocity motion model, gravity as a known (systematic) disturbance $\mathbf{u}$, and an observation $\mathbf{z}$ that measures only the position:
+For the filter, the throw is written as a discrete-time linear system with the state $`\mathbf{x} = [s_x, s_y, v_x, v_y]^T`$, a constant-velocity motion model, gravity as a known (systematic) disturbance $`\mathbf{u}`$, and an observation $`\mathbf{z}`$ that measures only the position:
 
-$$
+```math
 \mathbf{x}_{k+1} = \mathbf{A}\mathbf{x}_k + \mathbf{B}\mathbf{u} + \mathbf{w}_k,\quad \mathbf{w}_k \sim \mathcal{N}(0, \mathbf{Q})
 \qquad
 \mathbf{z}_k = \mathbf{H}\mathbf{x}_k + \mathbf{v}_k,\quad \mathbf{v}_k \sim \mathcal{N}(0, \mathbf{R})
-$$
+```
 
-$$
+```math
 \mathbf{A} = \begin{bmatrix} 1 & 0 & \Delta t & 0 \\ 0 & 1 & 0 & \Delta t \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix},\quad
 \mathbf{B}\mathbf{u} = \begin{bmatrix} 0 \\ 0 \\ 0 \\ -g\,\Delta t \end{bmatrix},\quad
 \mathbf{H} = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{bmatrix}
-$$
+```
 
 ### The Kalman filter
 
@@ -83,8 +83,8 @@ Every time step combines *what should have happened* (prediction) with *what we 
 
 | Step | Equations |
 | --- | --- |
-| Predict | $\hat{\mathbf{x}}_k^- = \mathbf{A}\hat{\mathbf{x}}_{k-1} + \mathbf{B}\mathbf{u}$ <br> $\mathbf{P}_k^- = \mathbf{A}\mathbf{P}_{k-1}\mathbf{A}^T + \mathbf{Q}$ |
-| Update | $\mathbf{K}_k = \mathbf{P}_k^-\mathbf{H}^T(\mathbf{H}\mathbf{P}_k^-\mathbf{H}^T + \mathbf{R})^{-1}$ <br> $\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_k^- + \mathbf{K}_k(\mathbf{z}_k - \mathbf{H}\hat{\mathbf{x}}_k^-)$ <br> $\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k\mathbf{H})\mathbf{P}_k^-$ |
+| Predict | $`\hat{\mathbf{x}}_k^- = \mathbf{A}\hat{\mathbf{x}}_{k-1} + \mathbf{B}\mathbf{u}`$ <br> $`\mathbf{P}_k^- = \mathbf{A}\mathbf{P}_{k-1}\mathbf{A}^T + \mathbf{Q}`$ |
+| Update | $`\mathbf{K}_k = \mathbf{P}_k^-\mathbf{H}^T(\mathbf{H}\mathbf{P}_k^-\mathbf{H}^T + \mathbf{R})^{-1}`$ <br> $`\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_k^- + \mathbf{K}_k(\mathbf{z}_k - \mathbf{H}\hat{\mathbf{x}}_k^-)`$ <br> $`\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k\mathbf{H})\mathbf{P}_k^-`$ |
 
 In the workshop these lines translate almost one to one into code, for example `P = add(mul(A, P, T(A)), Q)`.
 
